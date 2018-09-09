@@ -1,0 +1,40 @@
+#include <myserver.h>
+
+myserver::myserver(){}
+
+myserver::~myserver(){}
+
+void myserver::startServer(){
+    if (this->listen(QHostAddress::Any, 5555)){
+        qDebug()<<"Listening...";
+    } else {
+        qDebug()<<"Error: not listening";
+    }
+}
+
+
+void myserver::incomingConnection(int socketDescriptor){
+    socket = new QTcpSocket(this);
+    socket->setSocketDescriptor(socketDescriptor);
+
+    connect(socket, SIGNAL(readyRead()), this, SLOT(sockReady()));
+    connect(socket, SIGNAL(disconnected()), this, SLOT(sockDisc()));
+
+    qDebug() << socketDescriptor << " client connected";
+
+    socket->write("Connection estabilished");
+
+    qDebug() << "Connection status sent - OK";
+
+}
+
+
+void myserver::sockReady(){
+
+
+}
+
+void myserver::sockDisc(){
+    qDebug() << "Disconnected";
+    socket->deleteLater();
+}
