@@ -22,7 +22,8 @@ void myserver::incomingConnection(int socketDescriptor){
 
     qDebug() << socketDescriptor << " client connected";
 
-    socket->write("Connection estabilished");
+    //send json array : {"type":"connect", "status":"OK"}
+    socket->write("{\"type\":\"connect\", \"status\":\"OK\"}");
 
     qDebug() << "Connection status sent - OK";
 
@@ -30,6 +31,35 @@ void myserver::incomingConnection(int socketDescriptor){
 
 
 void myserver::sockReady(){
+    Data = socket->readAll();
+    qDebug() << "Data: " << Data;
+
+
+    doc = QJsonDocument::fromJson(Data, &docError);
+
+    if (docError.error != QJsonParseError::NoError) {
+        qDebug()<< "Error code: " << docError.errorString();
+        return;
+    }
+
+
+    //Expect: {"type":"select", "params":"workers"}
+    if (doc.object().value("type").toString() == "select" && doc.object().value("params").toString() == "workers"){
+        QFile file;
+        file.setFileName("C:\\Sanduku\\QTNetworkingTraining\\jsonserver\\workers.json");
+        if (file.open(QIODevice::ReadOnly | QFile::Text)){
+            QByteArray fromFile = file.readAll();
+            // {"type":"resultSelect", "result":...}
+            QByteArray returnString = "{\"type\":\"selectResult\", \"result\":"+ fromFile +"}";
+
+            socket->write(returnString);
+            socket->waitForBytesWritten(500);
+        }
+
+        file.close();
+    }
+
+
 
 
 }
